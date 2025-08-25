@@ -19,6 +19,7 @@ public:
 
     int& operator[](int index);
     const int& operator[](int index) const;
+    DynamicArray& operator=(const DynamicArray& other);
 };
 
 #endif // DYNAMICARRAY_H

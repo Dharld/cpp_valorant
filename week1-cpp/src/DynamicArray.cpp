@@ -91,3 +91,22 @@ int& DynamicArray::operator[](int index) {
 const int& DynamicArray::operator[](int index) const {
     return data[index];
 }
+
+DynamicArray& DynamicArray::operator=(const DynamicArray& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    delete[] data;
+
+    size = other.size;
+    capacity = other.capacity;
+
+    data = new int[capacity];
+
+    for (int i = 0; i < size; i++) {
+        data[i] = other.data[i];
+    }
+
+    return *this;
+}
