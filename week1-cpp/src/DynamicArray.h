@@ -13,6 +13,9 @@ public:
 
     int getSize() const;
     void push_back(int value);
+    int pop_back();
+    void resize(int new_size);
+    void clear();
 
     int& operator[](int index);
     const int& operator[](int index) const;

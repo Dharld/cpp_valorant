@@ -1,25 +1,36 @@
 #include <iostream>
 #include "DynamicArray.h"
 
-void printDynamicArray(const DynamicArray& arr) {
+void printArray(const DynamicArray& arr) {
+    std::cout << "Size = " << arr.getSize() << ": [ ";
     for (int i = 0; i < arr.getSize(); i++) {
         std::cout << arr[i] << " ";
     }
-
+    std::cout << "]\n";
 }
 
-int main() { 
+int main() {
     DynamicArray arr;
-    
-    for (int i = 1; i <= 10; i++) {
-        arr.push_back(i * i);
-    }
 
-    std::cout << "Array size: " << arr.getSize() << std::endl;
-    printDynamicArray(arr); 
+    // Fill with 1..5
+    for (int i = 1; i <= 5; i++) arr.push_back(i);
+    std::cout << "Initial array:\n";
+    printArray(arr);
 
-    // Copy array
-    DynamicArray c = arr;
-    printDynamicArray(c);
+    // Shrink
+    arr.resize(3);
+    std::cout << "After resize(3):\n";
+    printArray(arr);
+
+    // Grow within capacity
+    arr.resize(6);
+    std::cout << "After resize(6):\n";
+    printArray(arr);
+
+    // Grow beyond capacity
+    arr.resize(20);
+    std::cout << "After resize(20):\n";
+    printArray(arr);
+
+    return 0;
 }
-
