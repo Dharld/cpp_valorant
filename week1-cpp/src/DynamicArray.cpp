@@ -1,4 +1,6 @@
 #include "DynamicArray.h"
+#include <algorithm>
+#include <initializer_list>
 #include <iostream>
 #include <new>
 #include <stdexcept>
@@ -18,11 +20,45 @@ DynamicArray::DynamicArray(const DynamicArray& other)
     }
 }
 
-DynamicArray::DynamicArray(DynamicArray&& other) {
+DynamicArray::DynamicArray(DynamicArray&& other) noexcept {
     swap(other);
     other.data = nullptr;
     other.size = 0;
     other.capacity = 0;
+}
+
+DynamicArray::DynamicArray(std::initializer_list<int> list) {
+    size = capacity = list.size();
+
+    if (capacity > 0) {
+        data = new int[capacity];
+        reallocation_count++;
+
+        int* dest = data;
+        for (const int& element: list) {
+            *dest++ = element;
+        }
+    } else {
+        data = nullptr;
+    }
+}
+
+DynamicArray::DynamicArray(const int* first, const int* last) {
+    if (last < first) return;
+
+    int n = last - first;
+
+    size = capacity = n;
+    data = new int[capacity];
+    reallocation_count++;
+
+    int* curr = data;
+    const int* ptr = first;
+
+    while (ptr != last) {
+        *curr++ = *ptr++;
+    }
+
 }
 
 DynamicArray::~DynamicArray() {
@@ -145,6 +181,66 @@ void DynamicArray::swap(DynamicArray& other) noexcept  {
     other.data = temp_data;
 }
 
+ void DynamicArray::insert(int pos, int value) {
+    // Bounds checking
+    if (pos < 0 || pos > size) {
+        throw std::out_of_range("Insert position out of range");
+    }
+    
+    // Check if reallocation needed
+    if (size == capacity) {
+        // Need to grow
+        int new_capacity = std::max(1, 2 * capacity);
+        int* new_data = new int[new_capacity];
+        reallocation_count++;
+        
+        // Copy elements before insertion point
+        for (int i = 0; i < pos; i++) {
+            new_data[i] = data[i];
+        }
+        
+        // Insert the new value
+        new_data[pos] = value;
+        
+        // Copy elements after insertion point
+        for (int i = pos; i < size; i++) {
+            new_data[i + 1] = data[i];
+        }
+        
+        // Clean up and update
+        delete[] data;
+        data = new_data;
+        capacity = new_capacity;
+    } else {
+        // Insert in place - shift elements right (backwards to avoid overwriting)
+        for (int i = size - 1; i >= pos; i--) {
+            data[i + 1] = data[i];
+        }
+        
+        // Insert the new value
+        data[pos] = value;
+    }
+    
+    // Always increment size
+    size++;
+}
+
+
+void DynamicArray::erase(int pos) {
+    if (size == 0) {
+        throw std::out_of_range("Erase from empty array");
+    }
+    if (pos < 0 || pos >= size) {
+        throw std::out_of_range("Insert position out of range.");
+    }
+    
+    for (int i = pos + 1; i < size; i++) {
+        data[i - 1] = data[i];
+    }
+
+    size--;
+}
+
 DynamicArray::iterator DynamicArray::begin() {
     return data;
 };
@@ -203,7 +299,7 @@ DynamicArray& DynamicArray::operator=(const DynamicArray& other) {
     return *this;
 }
 
-DynamicArray& DynamicArray::operator=(DynamicArray&& other) {
+DynamicArray& DynamicArray::operator=(DynamicArray&& other) noexcept {
     if (this == &other) return *this;
 
     swap(other);
@@ -252,4 +348,16 @@ bool DynamicArray::operator!=(const DynamicArray& other) const {
     return !(*this == other);
 }
 
-
+std::ostream& operator<<(std::ostream& os, const DynamicArray& arr) {
+    os << "[";
+    
+    for (int i = 0; i < arr.size; i++) {
+        os << arr.data[i];
+        if (i < arr.size - 1) {
+            os << ", ";
+        }
+    }
+    
+    os << "]";
+    return os;
+}

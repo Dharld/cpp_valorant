@@ -1,6 +1,8 @@
 #ifndef DYNAMICARRAY_H
 #define DYNAMICARRAY_H
 
+#include <initializer_list>
+#include <ostream>
 class DynamicArray {
     int* data;      // pointer to the heap array
     int size;       // how many elements are stored
@@ -10,7 +12,9 @@ class DynamicArray {
 public:
     DynamicArray();                          // default constructor
     DynamicArray(const DynamicArray& other); // copy constructor
-    DynamicArray(DynamicArray&& other);      // move constructor
+    DynamicArray(DynamicArray&& other) noexcept;      // move constructor
+    DynamicArray(std::initializer_list<int> list);
+    DynamicArray(const int* first, const int* last);
     ~DynamicArray();                         // destructor
 
     int get_size() const; 
@@ -25,6 +29,8 @@ public:
     int get_reallocation_count() const;
     void reset_reallocation_count();
     void swap(DynamicArray& other) noexcept;
+    void erase(int pos);
+    void insert(int pos, int value);
 
     // Iterators
     using iterator = int*;
@@ -41,10 +47,11 @@ public:
     int& operator[](int index);
     const int& operator[](int index) const;
     DynamicArray& operator=(const DynamicArray& other);
-    DynamicArray& operator=(DynamicArray&& other);
+    DynamicArray& operator=(DynamicArray&& other) noexcept;
     DynamicArray operator+(const DynamicArray& other) const;
     bool operator==(const DynamicArray& other) const;
     bool operator!=(const DynamicArray& other) const;
+    friend std::ostream& operator<<(std::ostream& os, const DynamicArray& arr);
 };
 
 #endif // DYNAMICARRAY_H
