@@ -42,6 +42,9 @@ public:
     const int& operator[](int index) const;
     DynamicArray& operator=(const DynamicArray& other);
     DynamicArray& operator=(DynamicArray&& other);
+    DynamicArray operator+(const DynamicArray& other) const;
+    bool operator==(const DynamicArray& other) const;
+    bool operator!=(const DynamicArray& other) const;
 };
 
 #endif // DYNAMICARRAY_H

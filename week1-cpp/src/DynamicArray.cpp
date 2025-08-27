@@ -2,6 +2,7 @@
 #include <iostream>
 #include <new>
 #include <stdexcept>
+#include <utility>
 
 DynamicArray::DynamicArray() : data(nullptr), size(0), capacity(0), reallocation_count(0) {}
 
@@ -213,3 +214,42 @@ DynamicArray& DynamicArray::operator=(DynamicArray&& other) {
 
     return *this;
 }
+
+ DynamicArray DynamicArray::operator+(const DynamicArray& other) const {
+    DynamicArray result;
+    
+    int s1 = this->get_size();
+    int s2 = other.get_size();
+    
+    result.reserve(s1 + s2);
+    
+    // Copy from this array
+    for (int i = 0; i < s1; i++) {
+        result.push_back(this->data[i]);
+    }
+    
+    // Copy from other array
+    for (int i = 0; i < s2; i++) {
+        result.push_back(other.data[i]);
+    }
+    
+    return result;
+}
+
+ bool DynamicArray::operator==(const DynamicArray& other) const {
+    if (this->size != other.size) return false;
+
+    for (int i = 0; i < size; i++) {
+        if(this->data[i] != other.data[i]) {
+            return false;
+        }
+    }
+
+    return true;
+ }
+
+bool DynamicArray::operator!=(const DynamicArray& other) const {
+    return !(*this == other);
+}
+
+
