@@ -44,7 +44,9 @@ public:
     void fill(double v);
     void swap(Matrix& other) noexcept;
     double det(double eps = 1e-12) const;
-
+    Matrix solve(const Matrix& B, double eps = 1e-12) const;
+    Matrix forward_substitution(const Matrix& L, Matrix& Pb) const; 
+    Matrix backward_substitution(const Matrix& U, const Matrix& y, double eps = 1e-12) const;
 
     bool operator==(const Matrix& rhs) const;
     Matrix operator+(const Matrix&  rhs) const;

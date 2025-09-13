@@ -123,7 +123,10 @@ struct LuResult Matrix::factorizeGEPP(double eps) const {
         const double piv = out.U(k,k);
         for (std::size_t i = k + 1; i < n; ++i) {
             const double m = out.U(i,k) / piv;
-            for (std::size_t j = k; j < n; ++j) {
+
+            out.U(i,k) = m; // store the multiplier in the matrix
+            
+            for (std::size_t j = k + 1; j < n; ++j) {
                 out.U(i,j) -= m * out.U(k,j);
             }
         }
@@ -149,6 +152,94 @@ double Matrix::det(double eps) const {
         prod *= d;
     }
     return prod;
+}
+
+ Matrix Matrix::forward_substitution(const Matrix& L, Matrix& Pb) const {
+    const std::size_t n = L.rows();
+    if (L.rows() != L.cols()) {
+        throw std::invalid_argument("forward_substitution: L must be square");
+    }
+    if (Pb.rows() != n) {
+        throw std::invalid_argument("forward_substitution: row mismatch between L and Pb");
+    }
+
+    const std::size_t k = Pb.cols(); // number of RHS
+
+    // In-place: overwrite Pb with y
+    for (std::size_t i = 0; i < n; ++i) {
+        for (std::size_t j = 0; j < k; ++j) {
+            double sum = Pb(i, j);                  // start from b'_i,j
+            for (std::size_t t = 0; t < i; ++t) {   // strictly below diagonal
+                sum -= L(i, t) * Pb(t, j);          // subtract L(i,t) * y(t,j)
+            }
+            // L(i,i) == 1 (unit lower), so no division needed
+            Pb(i, j) = sum;
+        }
+    }
+
+    return Pb; // now holds y
+}
+
+Matrix Matrix::backward_substitution(const Matrix& U, const Matrix& y, double eps) const {
+    if (U.rows() != U.cols()) {
+        throw std::invalid_argument("back_substitution: U must be square");
+    }
+    if (y.rows() != U.rows()) {
+        throw std::invalid_argument("back_substitution: row mismatch between U and y");
+    }
+
+    const std::size_t n = U.rows();
+    const std::size_t k = y.cols();
+
+    Matrix X(n, k, 0.0);
+
+    // loop downward: n-1, n-2, ..., 0
+    for (std::size_t i = n; i-- > 0;) {
+        double piv = U(i,i);
+        if (std::fabs(piv) < eps) {
+            throw std::domain_error("back_substitution: singular/near-singular pivot");
+        }
+
+        for (std::size_t j = 0; j < k; ++j) {
+            double sum = y(i,j);
+            for (std::size_t t = i+1; t < n; ++t) {
+                sum -= U(i,t) * X(t,j);
+            }
+            X(i,j) = sum / piv;
+        }
+    }
+
+    return X;
+}
+
+Matrix Matrix::solve(const Matrix& B, double eps) const {
+    if (rows_ != cols_) throw std::invalid_argument("solve: A must be square");
+    if (rows_ != B.rows()) throw std::invalid_argument("solve: A and B row mismatch");
+   
+    size_t n = rows_;
+
+    // Get the LU factorization of A
+    LuResult lu = factorizeGEPP(eps);
+
+    // Sanity check
+    for (int i = 0; i < n; i++) {
+        if(std::fabs(lu.U(i, i)) < eps) throw std::domain_error("solve: singular matrix");
+    }
+    
+    // Do a permutation of the rows of B
+    Matrix Pb{n, B.cols(), 0};
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < B.cols(); j++) {
+            Pb(i, j) = B(lu.piv[i], j);
+        }
+    }
+
+    // Forward subsitution
+    forward_substitution(lu.U, Pb);
+    Matrix X = backward_substitution(lu.U, Pb);
+
+    return X;
 }
 
 bool Matrix::operator==(const Matrix& rhs) const {
